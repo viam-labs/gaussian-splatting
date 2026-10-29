@@ -1,4 +1,6 @@
-"""On-disk ledger of a scan: manifest.json and frames.jsonl. Shared by the module (writer) and splat-build (reader).
+"""On-disk ledger of a scan: manifest.json and frames.jsonl.
+
+Shared by the module (writer) and splat-build (reader).
 
 Kept as plain dataclasses with explicit to/from dict so the JSON is the contract, not Python pickling.
 """

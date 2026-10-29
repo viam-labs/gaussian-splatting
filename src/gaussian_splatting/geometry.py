@@ -1,7 +1,7 @@
 """Pose math shared by the module and splat-build.
 
-Viam represents rotations as an orientation vector (o_x, o_y, o_z, theta): (o_x, o_y, o_z) is where the frame's
-+Z axis points, theta is the roll about it. The conversion below is a port of RDK `spatialmath`
+Viam represents rotations as an orientation vector (o_x, o_y, o_z, theta): (o_x, o_y, o_z) is where the
+frame's +Z axis points, theta is the roll about it. The conversion below is a port of RDK `spatialmath`
 (`OrientationVector.Quaternion` and `QuatToOV`): R = Rz(lon) Ry(lat) Rz(theta) with lon = atan2(o_y, o_x),
 lat = acos(o_z), and a special case within POLE_RADIUS of +/-Z where theta is measured as if lon were zero.
 Getting this wrong rotates every camera pose in the splat, so it is tested against RDK's own fixtures.
@@ -156,8 +156,8 @@ def T_to_pose(t: Mat) -> Pose:
 def look_at_rotation(position: Mat, target: Mat, roll_rad: float = 0.0) -> Mat:
     """Camera rotation whose +Z points from `position` to `target`, image up closest to world up, then rolled.
 
-    Columns are the camera axes in the parent frame. Camera convention is Viam's and COLMAP's: x right, y down,
-    z forward. "Image up closest to world up" means camera -y is as close to world +Z as the view allows.
+    Columns are the camera axes in the parent frame. Camera convention is Viam's and COLMAP's: x right,
+    y down, z forward. "Image up closest to world up" means camera -y is as close to world +Z as the view allows.
     """
     z = np.asarray(target, dtype=np.float64) - np.asarray(position, dtype=np.float64)
     n = float(np.linalg.norm(z))

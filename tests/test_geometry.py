@@ -14,7 +14,8 @@ def test_identity() -> None:
 
 
 def test_rdk_fixture_roll_45_about_x() -> None:
-    # RDK spatialmath/orientation_test.go: ov45x = {Theta: pi/2, OX: 0, OY: -sqrt2/2, OZ: sqrt2/2} <-> Rx(pi/4)
+    # RDK spatialmath/orientation_test.go:
+    # ov45x = {Theta: pi/2, OX: 0, OY: -sqrt2/2, OZ: sqrt2/2} <-> Rx(pi/4)
     th = math.pi / 4
     r = g.ov_to_rotation(0.0, -math.sqrt(2) / 2, math.sqrt(2) / 2, math.pi / 2)
     assert np.allclose(r, g.rot_x(th), atol=1e-12)
