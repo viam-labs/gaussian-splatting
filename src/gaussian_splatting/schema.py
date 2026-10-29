@@ -216,7 +216,7 @@ def frame_extras(manifest: Manifest) -> dict[str, Any]:
 
 
 def frame_payload(frame: FrameRecord, extras: Mapping[str, Any]) -> dict[str, Any]:
-    """The payload contract: `FrameRecord.to_dict()` without `uploaded` (local bookkeeping), plus `frame_extras`."""
+    """The payload contract: `FrameRecord.to_dict()` minus `uploaded` (local bookkeeping), plus extras."""
     payload = frame.to_dict()
     payload.pop("uploaded", None)
     return {**payload, **extras}
