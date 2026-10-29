@@ -205,3 +205,28 @@ async def test_prune_removes_old_finished_scans(tmp_path: Path) -> None:
         schema.write_manifest(root / name, schema.Manifest(scan_id=name, state="done", finished_at=finished))
     resp = await call(scanner, {"prune": {"days": 7}})
     assert resp["removed"] == ["old"] and not (root / "old").exists() and (root / "new").exists()
+
+
+async def test_upload_results_persist_in_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Regression: the uploader edits its own manifest copy; the job's final write must not clobber it.
+    from gaussian_splatting.module import scanner as scanner_module
+    from gaussian_splatting.module.uploader import DataClientHandle
+    from tests.fakes import FakeDataClient
+
+    for k, v in (("VIAM_API_KEY", "k"), ("VIAM_API_KEY_ID", "id"), ("VIAM_MACHINE_PART_ID", "part")):
+        monkeypatch.setenv(k, v)
+    fake = FakeDataClient()
+
+    async def opener(creds: object) -> DataClientHandle:
+        return DataClientHandle(client=fake, close=lambda: None)
+
+    monkeypatch.setattr(scanner_module, "open_data_client", opener)
+    scanner = make_scanner(tmp_path)
+    await call(
+        scanner, {"start_scan": {"num_poses": 2, "upload": True, "dataset_id": "ds-1", "scan_id": "u"}}
+    )
+    st = await wait_done(scanner)
+    assert st["state"] == "done" and st["sequence_id"]
+    manifest = schema.read_manifest(tmp_path / "scans" / "u")
+    assert manifest.sequence_id == st["sequence_id"]
+    assert manifest.dataset_added is True and manifest.dataset_id == "ds-1"

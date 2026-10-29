@@ -206,6 +206,12 @@ class ScanJob:
         self._set_state("finalizing")
         self._on_upload_progress(report)
         self.sequence_id = report.sequence_id
+        # The uploader worked on its own copy of the manifest read from disk; take its results over before the
+        # job's final manifest write, or that write would clobber them with stale values.
+        self.manifest.sequence_id = report.sequence_id
+        self.manifest.dataset_added = report.dataset_added
+        if report.dataset_added and self.manifest.dataset_id is None:
+            self.manifest.dataset_id = self.request.dataset_id
         if report.dataset_error is not None:
             self.last_error = f"sequence created but not added to dataset: {report.dataset_error}"
 

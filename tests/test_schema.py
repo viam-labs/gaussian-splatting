@@ -49,3 +49,9 @@ def test_camera_model_variants() -> None:
     assert s.CameraModel(1, 1, 1, 1, 0, 0).colmap_model == "PINHOLE"
     assert s.CameraModel(1, 1, 1, 1, 0, 0, k3=0.01).colmap_model == "FULL_OPENCV"
     assert len(s.CameraModel(1, 1, 1, 1, 0, 0, k3=0.01).colmap_params) == 12
+
+
+def test_camera_model_coerces_float_dimensions_from_cloud_json() -> None:
+    cm = s.CameraModel(**{"width": 640.0, "height": 480.0, "fx": 1.0, "fy": 1.0, "cx": 0.0, "cy": 0.0})
+    assert cm.width == 640 and isinstance(cm.width, int)
+    assert cm.height == 480 and isinstance(cm.height, int)

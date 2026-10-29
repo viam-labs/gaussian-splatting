@@ -56,6 +56,11 @@ class CameraModel:
     k3: float = 0.0
     source: str = "camera"
 
+    def __post_init__(self) -> None:
+        # Cloud round trips (protobuf Struct, parquet JSON) turn every number into a float; COLMAP wants ints.
+        self.width = int(self.width)
+        self.height = int(self.height)
+
     @property
     def colmap_model(self) -> str:
         if all(v == 0.0 for v in (self.k1, self.k2, self.p1, self.p2, self.k3)):
