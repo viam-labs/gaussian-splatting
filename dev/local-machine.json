@@ -1,0 +1,65 @@
+{
+  "network": {
+    "bind_address": "localhost:8080"
+  },
+  "modules": [
+    {
+      "type": "local",
+      "name": "gaussian-splatting",
+      "executable_path": "/Users/robin/bov/jenga/gaussian-splatting/run.sh"
+    }
+  ],
+  "components": [
+    {
+      "name": "arm",
+      "api": "rdk:component:arm",
+      "model": "fake",
+      "attributes": {
+        "arm-model": "lite6"
+      },
+      "frame": {
+        "parent": "world"
+      }
+    },
+    {
+      "name": "camera",
+      "api": "rdk:component:camera",
+      "model": "fake",
+      "attributes": {
+        "width": 640,
+        "height": 480,
+        "model": true
+      },
+      "frame": {
+        "parent": "arm",
+        "translation": { "x": 0, "y": 0, "z": 50 },
+        "orientation": { "type": "ov_degrees", "value": { "x": 0, "y": 0, "z": 1, "th": 0 } }
+      }
+    },
+    {
+      "name": "scan-state",
+      "api": "rdk:component:sensor",
+      "model": "viam:gaussian-splatting:scan-state"
+    }
+  ],
+  "services": [
+    {
+      "name": "scanner",
+      "api": "rdk:service:generic",
+      "model": "viam:gaussian-splatting:scanner",
+      "attributes": {
+        "arm": "arm",
+        "camera": "camera",
+        "motion": "builtin",
+        "scan_state": "scan-state",
+        "region_mm": { "center": [250, 0, 0], "size": [300, 300, 50] },
+        "standoff_mm": [150, 300],
+        "elevation_deg": [30, 80],
+        "azimuth_deg": [-120, 120],
+        "dwell_s": 0.1,
+        "min_sharpness": 0.5,
+        "upload": false
+      }
+    }
+  ]
+}

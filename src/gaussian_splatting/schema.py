@@ -8,7 +8,9 @@ Kept as plain dataclasses with explicit to/from dict so the JSON is the contract
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -139,6 +141,7 @@ class Manifest:
     state: str = "planning"
     sequence_id: str | None = None
     dataset_id: str | None = None
+    dataset_added: bool = False
     planned_viewpoints: list[dict[str, Any]] = field(default_factory=list)
     skipped_viewpoints: list[dict[str, Any]] = field(default_factory=list)
     last_error: str | None = None
@@ -183,3 +186,37 @@ def rewrite_frames(scan_dir: Path, frames: list[FrameRecord]) -> None:
     tmp = scan_dir / (FRAMES_NAME + ".tmp")
     tmp.write_text("".join(json.dumps(fr.to_dict()) + "\n" for fr in frames))
     tmp.replace(scan_dir / FRAMES_NAME)
+
+
+def format_rfc3339(dt: datetime) -> str:
+    """Datetime to the RFC 3339 UTC string the ledger stores, millisecond precision, `Z` suffix."""
+    if dt.tzinfo is None:
+        raise ValueError("timestamps must be timezone-aware")
+    return dt.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def parse_rfc3339(s: str) -> datetime:
+    """Inverse of `format_rfc3339`; always returns an aware UTC datetime."""
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
+
+
+def frame_extras(manifest: Manifest) -> dict[str, Any]:
+    """Top-level keys added to every frame payload (scan-state readings and tabular uploads) beside the
+    FrameRecord fields, so splat-build's join can rebuild the manifest from the first reading alone."""
+    return {
+        "camera_model": asdict(manifest.camera_model) if manifest.camera_model is not None else None,
+        "scan_id": manifest.scan_id,
+        "arm": manifest.arm,
+        "num_poses": manifest.resolved.get("num_poses"),
+        "min_sharpness": manifest.resolved.get("min_sharpness"),
+    }
+
+
+def frame_payload(frame: FrameRecord, extras: Mapping[str, Any]) -> dict[str, Any]:
+    """The payload contract: `FrameRecord.to_dict()` without `uploaded` (local bookkeeping), plus `frame_extras`."""
+    payload = frame.to_dict()
+    payload.pop("uploaded", None)
+    return {**payload, **extras}
