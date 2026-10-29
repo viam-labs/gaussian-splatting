@@ -157,7 +157,8 @@ def look_at_rotation(position: Mat, target: Mat, roll_rad: float = 0.0) -> Mat:
     """Camera rotation whose +Z points from `position` to `target`, image up closest to world up, then rolled.
 
     Columns are the camera axes in the parent frame. Camera convention is Viam's and COLMAP's: x right,
-    y down, z forward. "Image up closest to world up" means camera -y is as close to world +Z as the view allows.
+    y down, z forward. "Image up closest to world up" means camera -y is as close to world +Z as the view
+    allows.
     """
     z = np.asarray(target, dtype=np.float64) - np.asarray(position, dtype=np.float64)
     n = float(np.linalg.norm(z))
