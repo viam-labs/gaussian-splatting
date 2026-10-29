@@ -201,3 +201,32 @@ def upload(
 
 if __name__ == "__main__":
     app()
+
+
+@app.command("create-dataset")
+def create_dataset(
+    org_id: Annotated[str, typer.Option("--org-id", help="Organization that owns the dataset")],
+    name: Annotated[str, typer.Option("--name", help="Dataset name")],
+) -> None:
+    """Create the sequence dataset scans are added to (one-time setup; needs an org API key in the env)."""
+    from viam.app.viam_client import ViamClient
+    from viam.proto.app.dataset import DatasetType
+
+    api_key = os.environ.get("VIAM_API_KEY")
+    api_key_id = os.environ.get("VIAM_API_KEY_ID")
+    if not api_key or not api_key_id:
+        raise typer.BadParameter("set VIAM_API_KEY and VIAM_API_KEY_ID (see .env.example)")
+
+    async def run() -> str:
+        client = await ViamClient.create_from_dial_options(
+            DialOptions.with_api_key(api_key=api_key, api_key_id=api_key_id)
+        )
+        try:
+            # The SDK defaults to a binary dataset; sequences can only be added to a sequence dataset.
+            return await client.data_client.create_dataset(
+                name=name, organization_id=org_id, type=DatasetType.DATASET_TYPE_SEQUENCE_DATA
+            )
+        finally:
+            client.close()
+
+    typer.echo(asyncio.run(run()))

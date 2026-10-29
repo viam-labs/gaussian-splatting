@@ -75,6 +75,7 @@ uv run splat-scan start --num-poses 150 [--dry-run] [--tags cell-v1]   # start, 
 uv run splat-scan status
 uv run splat-scan cancel
 uv run splat-scan upload --scan-id <id>
+uv run splat-scan create-dataset --org-id <org> --name <name>   # one-time: the sequence dataset scans go into
 ```
 
 ### `splat-build`: sequence → splat, never touches the robot
