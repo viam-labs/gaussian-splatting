@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from gaussian_splatting import schema as s
 
@@ -52,6 +53,7 @@ def test_camera_model_variants() -> None:
 
 
 def test_camera_model_coerces_float_dimensions_from_cloud_json() -> None:
-    cm = s.CameraModel(**{"width": 640.0, "height": 480.0, "fx": 1.0, "fy": 1.0, "cx": 0.0, "cy": 0.0})
+    raw: dict[str, Any] = {"width": 640.0, "height": 480.0, "fx": 1.0, "fy": 1.0, "cx": 0.0, "cy": 0.0}
+    cm = s.CameraModel(**raw)
     assert cm.width == 640 and isinstance(cm.width, int)
     assert cm.height == 480 and isinstance(cm.height, int)
