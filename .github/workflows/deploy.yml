@@ -1,0 +1,82 @@
+name: Deploy module
+
+# Every merge to main publishes a prerelease (v0.0.1-rc.N) to the Viam Registry; machines pinned to
+# "latest-with-prerelease" pick it up. A published GitHub release (or manual dispatch) publishes a clean
+# version and syncs meta.json to the registry.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag (e.g. v0.0.1)
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compute-version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump rc tag
+        id: bump
+        if: github.event_name == 'push'
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: __none__
+          pre_release_branches: main
+          append_to_pre_release_tag: rc
+          default_bump: patch
+
+      - name: Resolve version
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${{ steps.bump.outputs.new_tag }}"
+          else
+            VERSION="${{ inputs.version || github.ref_name }}"
+          fi
+          echo "Resolved version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  publish-module:
+    needs: [compute-version]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      # Source tarball; the venv is built on the machine by setup.sh, so one upload serves every arch.
+      - name: Build module tarball
+        run: make module.tar.gz
+
+      - name: Upload to Viam Registry
+        uses: viamrobotics/upload-module@31b3909ba4d40f22a58c8479f3b4302538a5099b
+        with:
+          meta-path: meta.json
+          module-path: module.tar.gz
+          platform: any
+          version: ${{ needs.compute-version.outputs.version }}
+          key-id: ${{ secrets.viam_key_id }}
+          key-value: ${{ secrets.viam_key_secret }}
+          do-update: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && !github.event.release.prerelease) }}
+          do-upload: true
