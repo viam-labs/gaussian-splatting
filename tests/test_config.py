@@ -33,7 +33,8 @@ def test_defaults_and_dependencies() -> None:
         ({"upload": True}, "'scan_state' is required"),
         ({"region_mm": {"center": [0, 0, 0], "size": [1, 0, 1]}}, "positive"),
         ({"elevation_deg": [80, 30]}, "elevation_deg"),
-        ({"azimuth_deg": [-200, 10]}, "azimuth_deg"),
+        ({"azimuth_deg": [-400, 10]}, "azimuth_deg"),
+        ({"azimuth_deg": [-200, 200]}, "span at most"),
         ({"standoff_mm": [100]}, "[min, max]"),
         ({"dwell_s": "fast"}, "dwell_s"),
         ({"camera_intrinsics": {"dist": {}}}, "camera_intrinsics"),
@@ -83,3 +84,9 @@ def test_validate_config_through_proto() -> None:
     assert list(required) == ["lite6", "wrist", "builtin", "s"] and list(optional) == []
     with pytest.raises(c.ConfigError):
         Scanner.validate_config(ComponentConfig(name="scanner", attributes=dict_to_struct({"arm": "a"})))
+
+
+def test_azimuth_window_may_cross_180() -> None:
+    # Cameras on the -x side of the region need a window centred on 180 degrees.
+    cfg = c.parse_scanner_config({**BASE, "azimuth_deg": [100, 260]})
+    assert cfg.azimuth_deg == (100.0, 260.0)

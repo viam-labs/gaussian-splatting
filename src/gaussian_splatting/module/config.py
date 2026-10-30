@@ -119,7 +119,12 @@ def _vec3(value: object, key: str) -> tuple[float, float, float]:
 
 
 def _range(
-    attrs: Mapping[str, Any], key: str, default: tuple[float, float], lo: float, hi: float
+    attrs: Mapping[str, Any],
+    key: str,
+    default: tuple[float, float],
+    lo: float,
+    hi: float,
+    max_span: float | None = None,
 ) -> tuple[float, float]:
     value = attrs.get(key)
     if value is None:
@@ -129,7 +134,15 @@ def _range(
     a, b = (_number({"v": v}, "v") for v in value)
     if not (lo <= a <= b <= hi):
         raise ConfigError(f"'{key}' must satisfy {lo} <= min <= max <= {hi}, got {value!r}")
+    if max_span is not None and b - a > max_span:
+        raise ConfigError(f"'{key}' may span at most {max_span}, got {value!r}")
     return a, b
+
+
+def _azimuth_range(attrs: Mapping[str, Any], key: str, default: tuple[float, float]) -> tuple[float, float]:
+    """Azimuth is periodic: a window such as [100, 260] (cameras on the -x side) must be expressible, so the
+    bounds are [-360, 360] with a span of at most 360; the planner only ever takes cos/sin of it."""
+    return _range(attrs, key, default, -360.0, 360.0, max_span=360.0)
 
 
 def parse_region(value: object, key: str = "region_mm") -> Box:
@@ -218,7 +231,7 @@ def parse_scanner_config(attrs: Mapping[str, Any]) -> ScannerConfig:
         region=parse_region(attrs.get("region_mm")),
         standoff_mm=_range(attrs, "standoff_mm", DEFAULT_STANDOFF_MM, 1.0, 10_000.0),
         elevation_deg=_range(attrs, "elevation_deg", DEFAULT_ELEVATION_DEG, 0.0, 90.0),
-        azimuth_deg=_range(attrs, "azimuth_deg", DEFAULT_AZIMUTH_DEG, -180.0, 180.0),
+        azimuth_deg=_azimuth_range(attrs, "azimuth_deg", DEFAULT_AZIMUTH_DEG),
         dwell_s=_number(attrs, "dwell_s", 0.5),
         min_sharpness=_number(attrs, "min_sharpness", 60.0),
         static_mask=_string(attrs, "static_mask", required=False),
@@ -280,7 +293,7 @@ class ScanRequest:
             region=parse_region(region) if region is not None else cfg.region,
             standoff_mm=_range(cmd, "standoff_mm", cfg.standoff_mm, 1.0, 10_000.0),
             elevation_deg=_range(cmd, "elevation_deg", cfg.elevation_deg, 0.0, 90.0),
-            azimuth_deg=_range(cmd, "azimuth_deg", cfg.azimuth_deg, -180.0, 180.0),
+            azimuth_deg=_azimuth_range(cmd, "azimuth_deg", cfg.azimuth_deg),
             seed=int(_number(cmd, "seed", cfg.seed)),
             dwell_s=_number(cmd, "dwell_s", cfg.dwell_s),
             min_sharpness=_number(cmd, "min_sharpness", cfg.min_sharpness),
