@@ -3,17 +3,17 @@
   "module_id": "viam:gaussian-splatting",
   "visibility": "public",
   "url": "https://github.com/viam-labs/gaussian-splatting",
-  "description": "Drive any arm-mounted camera through a scan, upload posed images as a Viam sequence dataset, and build a metric Gaussian splat with 3DGRUT",
+  "description": "Scan a region with an arm-mounted camera and build a metric Gaussian splat (3DGRUT)",
   "models": [
     {
       "api": "rdk:service:generic",
       "model": "viam:gaussian-splatting:scanner",
-      "short_description": "Scans a region with an arm-mounted camera: one sharp posed image per viewpoint, uploaded as a sequence."
+      "short_description": "Scans a region with an arm-mounted camera: one sharp posed image per viewpoint, uploaded as a sequen"
     },
     {
       "api": "rdk:component:sensor",
       "model": "viam:gaussian-splatting:scan-state",
-      "short_description": "Per-frame record (camera pose, joints, viewpoint) of the running scan, so the sequence has a tabular resource."
+      "short_description": "Per-frame record (camera pose, joints, viewpoint) of the running scan, so the sequence has a tabular"
     }
   ],
   "entrypoint": "run.sh"
