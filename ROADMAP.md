@@ -23,7 +23,8 @@ Status of the `viam:gaussian-splatting` module. Design in `docs/spec.md`.
 
 ## Next
 
-- [ ] Publish to the registry (first as a prerelease) and pin a machine to `latest-with-prerelease`.
+- [x] Published `viam:gaussian-splatting` 0.0.1-rc.1 (platform any) on 2026-10-30; registry entry owned by the
+      `viam-dev` org. Still to do: the repo's deploy credentials, so merges to `main` publish automatically.
 - [ ] First scan on a real arm and camera: 30-pose smoke scan, acceptance table, then a full scan.
 - [ ] Jenga cell config values (region, standoff, dataset id) in the jenga-bot repo's machine config.
 - [ ] Spike result recorded: uploaded captures are selectable by sequences (confirmed 2026-10-29), so the
